@@ -1,0 +1,32 @@
+import requests
+from bs4 import BeautifulSoup
+import pandas as pd
+
+headers = {
+  'user-agent': '你的user-agent(到目標網頁按F12找)'
+}
+
+# 使用 requests 模組的 get 方法發起請求並取得網頁
+res = requests.get('https://www.notebookcheck.net/Acer-Aspire-5-A515-56-review-Good-value-office-laptop-with-reasonable-battery-life.667387.0.html', headers = headers)
+
+# 將網頁的編碼方式設為 utf-8
+res.encoding = 'utf-8'
+
+# 使用 BeautifulSoup 解析 HTML 網頁
+bs = BeautifulSoup(res.text, 'html.parser')
+
+# 選取 id 為 content 的區塊
+data = bs.select_one('#content')
+
+# 使用 pandas 模組的 read_html 方法解析所有表格
+dfs = pd.read_html(data.prettify())
+
+# 將所有表格合併成一個表格，並在表格的最左方新增一欄，用來記錄每個表格的分頁
+dfs = []
+for i, df in enumerate(pd.read_html(data.prettify())):
+    df['page'] = i + 1
+    dfs.append(df)
+df = pd.concat(dfs)
+
+# 將合併後的表格存成 CSV 檔
+df.to_csv('/content/table.csv', index=False)
